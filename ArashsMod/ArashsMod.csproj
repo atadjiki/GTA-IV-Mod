@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="ScriptHookDotNet">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto IV\GTAIV\scripts\for Developers\bin\ScriptHookDotNet.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
