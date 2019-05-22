@@ -12,7 +12,7 @@ namespace Mod
     {
         private bool scripton = false;
         private bool revent = false;
-        private string[] CopSkins = {"M_Y_COP", "M_Y_SWAT", "M_M_FBI", "M_M_FATCOP_01" };
+        private string[] CopSkins = { "M_Y_COP", "M_Y_SWAT", "M_M_FBI", "M_M_FATCOP_01" };
         private string[] CriminalSkins = { "M_Y_GOON_01", "M_Y_THIEF", "M_Y_GRU2_LO_01", "M_M_GRU2_LO_02", "M_M_GRU2_HI_02", "M_M_GRU2_HI_01", "M_Y_GRUS_HI_02", "M_Y_GRUS_LO_02", "M_Y_GRUS_LO_01", "M_O_GRUS_HI_01" };
 
         public Mod()
@@ -34,72 +34,56 @@ namespace Mod
             {
                 if (revent)
                 {
-                    if(Player.Character.isInVehicle() == false)
+                    if (Player.Character.isInVehicle() == false)
                     {
-                        int faction = RandomNumber(0, 25);
+                        int faction = RandomNumber(0, 10);
 
-                        if (faction == 5)
+                        if (faction <= 5)
                         {
-                            RandomEventCops();
-                        }else if(faction == 15)
+                            SpawnPedestrian(true);
+                        }
+                        else if (faction > 5)
                         {
-                            RandomEventCriminals();
+                            SpawnPedestrian(false);
                         }
                     }
                 }
             }
         }
 
-        private void RandomEventCops()
-        {
-
-            for(int i = 0; i < 5; i++)
-            {
-                Ped ped = World.CreatePed(RandomModel(true), Player.Character.GetOffsetPosition(new Vector3(30, 30, 0.0f)).ToGround());
-                if (Exists(ped) && ped != null)
-                {
-                    ped.BecomeMissionCharacter();
-                    ped.RelationshipGroup = RelationshipGroup.Cop;
-                    ped.ChangeRelationship(RelationshipGroup.Dealer, Relationship.Hate);
-                    ped.ChangeRelationship(RelationshipGroup.Criminal, Relationship.Hate);
-                    ped.Task.FightAgainstHatedTargets(1000);
-                    ped.MaxHealth = 100;
-                    ped.Health = 100;
-                    ped.Armor = 50;
-                    RandomWeapons(ped, true);
-                    Wait(10);
-                }
-            }
-
-           
-        }
-
-        private void RandomEventCriminals()
+        private void SpawnPedestrian(bool cop)
         {
 
             for (int i = 0; i < 5; i++)
             {
-
-                Ped ped = World.CreatePed(RandomModel(false), Player.Character.GetOffsetPosition(new Vector3(-30, 30, 0.0f)).ToGround());
+                Ped ped = World.CreatePed(RandomModel(cop), Player.Character.GetOffsetPosition(new Vector3(30, 30, 0.0f)).ToGround());
                 if (Exists(ped) && ped != null)
                 {
                     ped.BecomeMissionCharacter();
-                    ped.RelationshipGroup = RelationshipGroup.Criminal;
-                    ped.ChangeRelationship(RelationshipGroup.Dealer, Relationship.Hate);
-                    ped.ChangeRelationship(RelationshipGroup.Cop, Relationship.Hate);
+
+                    if (cop)
+                    {
+                        ped.RelationshipGroup = RelationshipGroup.Cop;
+                        ped.ChangeRelationship(RelationshipGroup.Criminal, Relationship.Hate);
+                    }
+                    else
+                    {
+                        ped.RelationshipGroup = RelationshipGroup.Criminal;
+                        ped.ChangeRelationship(RelationshipGroup.Cop, Relationship.Hate);
+                    }
+
                     ped.Task.FightAgainstHatedTargets(1000);
                     ped.MaxHealth = 100;
                     ped.Health = 100;
                     ped.Armor = 50;
-                    RandomWeapons(ped, false);
+                    RandomWeapons(ped, cop);
                     Wait(10);
                 }
             }
         }
-
         public void RandomWeapons(Ped ped, bool cop)
         {
-        
+
             if (cop)
             {
                 int weapon = RandomNumber(0, 4);
@@ -107,13 +91,16 @@ namespace Mod
                 if (weapon == 0)
                 {
                     ped.Weapons.AssaultRifle_M4.Ammo = 999999;
-                }else if(weapon == 1)
+                }
+                else if (weapon == 1)
                 {
                     ped.Weapons.MP5.Ammo = 999999;
-                }else if(weapon == 2)
+                }
+                else if (weapon == 2)
                 {
                     ped.Weapons.DesertEagle.Ammo = 999999;
-                }else if(weapon == 3)
+                }
+                else if (weapon == 3)
                 {
                     ped.Weapons.BarettaShotgun.Ammo = 999999;
                 }
@@ -137,7 +124,8 @@ namespace Mod
                 else if (weapon == 3)
                 {
                     ped.Weapons.BasicShotgun.Ammo = 999999;
-                }else if(weapon == 4)
+                }
+                else if (weapon == 4)
                 {
                     ped.Weapons.MolotovCocktails.Ammo = 10;
                 }
@@ -190,6 +178,6 @@ namespace Mod
             scripton = !scripton;
         }
 
-        
+
     }
-} 
+}
