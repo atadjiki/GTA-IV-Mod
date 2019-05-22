@@ -8,26 +8,47 @@ using GTA.Native;
 
 namespace Mod
 {
-    public class Mod : Script
+    public class Streetwar : Script
     {
         private bool scripton = false;
         private bool revent = false;
-        private string[] CopSkins = { "M_Y_COP", "M_Y_SWAT", "M_M_FBI", "M_M_FATCOP_01" };
-        private string[] CriminalSkins = { "M_Y_GOON_01", "M_Y_THIEF", "M_Y_GRU2_LO_01", "M_M_GRU2_LO_02", "M_M_GRU2_HI_02", "M_M_GRU2_HI_01", "M_Y_GRUS_HI_02", "M_Y_GRUS_LO_02", "M_Y_GRUS_LO_01", "M_O_GRUS_HI_01" };
 
-        public Mod()
+        private string[] CopSkins = { "M_Y_COP", "M_Y_SWAT", "M_M_FBI", "M_M_FATCOP_01" };
+        private string[] CriminalSkins = { "M_Y_GOON_01", "M_Y_THIEF", "M_Y_GRU2_LO_01", "M_M_GRU2_LO_02", "M_M_GRU2_HI_02", "M_M_GRU2_HI_01",
+                                           "M_Y_GRUS_HI_02", "M_Y_GRUS_LO_02", "M_Y_GRUS_LO_01", "M_O_GRUS_HI_01", "M_Y_GALB_LO_01", "M_Y_GALB_LO_02",
+                                           "M_Y_GALB_LO_03", "M_Y_GALB_LO_04", "M_Y_GMAF_HI_01", "M_Y_GMAF_HI_02", "M_M_FATMOB_01" };
+
+        public Streetwar()
         {
             //set interval
             Interval = Settings.GetValueInteger("INTERVAL", "SETTINGS", 10000);
             BindKey(Settings.GetValueKey("Toggle Script", "SETTINGS", Keys.K), new KeyPressDelegate(ScriptOn));
-            BindKey(Settings.GetValueKey("Toggle Pedestrian Events", "SETTINGS", Keys.L), new KeyPressDelegate(ScriptOn));
+            BindKey(Settings.GetValueKey("Toggle Pedestrian Events", "SETTINGS", Keys.L), new KeyPressDelegate(RandomEventsPedestrians));
 
             //bind tick event
             this.Tick += new EventHandler(RandomPedEvents_Tick);
 
         }
-
-        //tick method, ran every 20 secs
+        private int RandomNumber(int min, int max)
+        {
+            Random random = new Random();
+            return random.Next(min, max);
+        }
+        public void RandomEventsPedestrians()
+        {
+            if (scripton)
+            {
+                revent = !revent;
+                if (revent)
+                {
+                    Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Streetwar Starting...", 4000, 1);
+                }
+                else
+                {
+                    Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Streetwar Over", 4000, 1);
+                }
+            }
+        }
         public void RandomPedEvents_Tick(object sender, EventArgs e)
         {
             if (scripton)
@@ -50,7 +71,6 @@ namespace Mod
                 }
             }
         }
-
         private void SpawnPedestrian(bool cop)
         {
 
@@ -83,7 +103,6 @@ namespace Mod
         }
         public void RandomWeapons(Ped ped, bool cop)
         {
-
             if (cop)
             {
                 int weapon = RandomNumber(0, 4);
@@ -136,48 +155,20 @@ namespace Mod
             }
 
         }
-
-        private int RandomNumber(int min, int max)
-        {
-            Random random = new Random();
-            return random.Next(min, max);
-        }
-
         private Model RandomModel(bool cop)
         {
             if (cop)
-            {
-                int index = RandomNumber(0, CopSkins.Length);
-                return CopSkins[index];
+            { 
+                return CopSkins[RandomNumber(0, CopSkins.Length)];
             }
             else
-            {
-                int index = RandomNumber(0, CriminalSkins.Length);
-                return CriminalSkins[index];
+            { 
+                return CriminalSkins[RandomNumber(0, CriminalSkins.Length)];
             }
         }
-
-        public void RandomEventsPedestrians()
-        {
-            if (scripton)
-            {
-                revent = !revent;
-                if (revent)
-                {
-                    Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Streetwar Starting...", 4000, 1);
-                }
-                else
-                {
-                    Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Streetwar Over", 4000, 1);
-                }
-            }
-        }
-
         public void ScriptOn()
         {
             scripton = !scripton;
         }
-
-
     }
 }
