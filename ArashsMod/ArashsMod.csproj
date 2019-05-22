@@ -8,6 +8,9 @@
     <Reference Include="ScriptHookDotNet">
       <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto IV\GTAIV\scripts\for Developers\bin\ScriptHookDotNet.dll</HintPath>
     </Reference>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>System.Windows.Forms.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
