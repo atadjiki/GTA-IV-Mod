@@ -18,6 +18,10 @@ namespace Mod
                                            "M_Y_GRUS_HI_02", "M_Y_GRUS_LO_02", "M_Y_GRUS_LO_01", "M_O_GRUS_HI_01", "M_Y_GALB_LO_01", "M_Y_GALB_LO_02",
                                            "M_Y_GALB_LO_03", "M_Y_GALB_LO_04", "M_Y_GMAF_HI_01", "M_Y_GMAF_HI_02", "M_M_FATMOB_01" };
 
+        private int maxSpawn = 5;
+        private int spawnRadius = 50;
+        private int fightRadius = 300;
+
         public Streetwar()
         {
             //set interval
@@ -28,6 +32,40 @@ namespace Mod
             //bind tick event
             this.Tick += new EventHandler(RandomPedEvents_Tick);
 
+        }
+        private void SpawnPedestrian(bool cop)
+        {
+
+            int mod = 1;
+
+            if (!cop) { mod *= -1; }
+
+            for (int i = 0; i < RandomNumber(0,maxSpawn); i++)
+            {
+                Ped ped = World.CreatePed(RandomModel(cop), Player.Character.GetOffsetPosition(new Vector3(mod * spawnRadius, spawnRadius, 0.0f)).ToGround());
+                if (Exists(ped) && ped != null)
+                {
+                    ped.BecomeMissionCharacter();
+
+                    if (cop)
+                    {
+                        ped.RelationshipGroup = RelationshipGroup.Cop;
+                        ped.ChangeRelationship(RelationshipGroup.Criminal, Relationship.Hate);
+                    }
+                    else
+                    {
+                        ped.RelationshipGroup = RelationshipGroup.Criminal;
+                        ped.ChangeRelationship(RelationshipGroup.Cop, Relationship.Hate);
+                    }
+
+                    ped.Task.FightAgainstHatedTargets(300);
+                    ped.MaxHealth = 100;
+                    ped.Health = 100;
+                    ped.Armor = 50;
+                    RandomWeapons(ped, cop);
+                    Wait(10);
+                }
+            }
         }
         private int RandomNumber(int min, int max)
         {
@@ -68,36 +106,6 @@ namespace Mod
                             SpawnPedestrian(false);
                         }
                     }
-                }
-            }
-        }
-        private void SpawnPedestrian(bool cop)
-        {
-
-            for (int i = 0; i < 5; i++)
-            {
-                Ped ped = World.CreatePed(RandomModel(cop), Player.Character.GetOffsetPosition(new Vector3(30, 30, 0.0f)).ToGround());
-                if (Exists(ped) && ped != null)
-                {
-                    ped.BecomeMissionCharacter();
-
-                    if (cop)
-                    {
-                        ped.RelationshipGroup = RelationshipGroup.Cop;
-                        ped.ChangeRelationship(RelationshipGroup.Criminal, Relationship.Hate);
-                    }
-                    else
-                    {
-                        ped.RelationshipGroup = RelationshipGroup.Criminal;
-                        ped.ChangeRelationship(RelationshipGroup.Cop, Relationship.Hate);
-                    }
-
-                    ped.Task.FightAgainstHatedTargets(1000);
-                    ped.MaxHealth = 100;
-                    ped.Health = 100;
-                    ped.Armor = 50;
-                    RandomWeapons(ped, cop);
-                    Wait(10);
                 }
             }
         }
@@ -157,18 +165,9 @@ namespace Mod
         }
         private Model RandomModel(bool cop)
         {
-            if (cop)
-            { 
-                return CopSkins[RandomNumber(0, CopSkins.Length)];
-            }
-            else
-            { 
-                return CriminalSkins[RandomNumber(0, CriminalSkins.Length)];
-            }
+            if (cop){ return CopSkins[RandomNumber(0, CopSkins.Length)];}
+            else{ return CriminalSkins[RandomNumber(0, CriminalSkins.Length)];}
         }
-        public void ScriptOn()
-        {
-            scripton = !scripton;
-        }
+        public void ScriptOn(){scripton = !scripton;}
     }
 }
