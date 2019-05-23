@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Linq;
-using System.Text;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using GTA;
 using GTA.Native;
@@ -18,9 +16,11 @@ namespace Mod
                                            "M_Y_GRUS_HI_02", "M_Y_GRUS_LO_02", "M_Y_GRUS_LO_01", "M_O_GRUS_HI_01", "M_Y_GALB_LO_01", "M_Y_GALB_LO_02",
                                            "M_Y_GALB_LO_03", "M_Y_GALB_LO_04", "M_Y_GMAF_HI_01", "M_Y_GMAF_HI_02", "M_M_FATMOB_01" };
 
-        private int maxSpawn = 5;
+        private const int maxTotalPeds = 32;
+        private const int maxSpawnDuringTick = 5;
         private int spawnRadius = 50;
         private int fightRadius = 300;
+        public List<Ped> peds;
 
         public Streetwar()
         {
@@ -32,15 +32,30 @@ namespace Mod
             //bind tick event
             this.Tick += new EventHandler(RandomPedEvents_Tick);
 
+            peds = new List<Ped>();
+
         }
         private void SpawnPedestrian(bool cop)
         {
+
+            if (peds.Count >= maxTotalPeds)
+            {
+                foreach (Ped ped in peds)
+                {
+                    if (ped.isAlive == false)
+                    {
+                        peds.Remove(ped);
+                    }
+                }
+
+                return;
+            }
 
             int mod = 1;
 
             if (!cop) { mod *= -1; }
 
-            for (int i = 0; i < RandomNumber(0,maxSpawn); i++)
+            for (int i = 0; i < RandomNumber(0, maxSpawnDuringTick); i++)
             {
                 Ped ped = World.CreatePed(RandomModel(cop), Player.Character.GetOffsetPosition(new Vector3(mod * spawnRadius, spawnRadius, 0.0f)).ToGround());
                 if (Exists(ped) && ped != null)
@@ -63,6 +78,9 @@ namespace Mod
                     ped.Health = 100;
                     ped.Armor = 50;
                     RandomWeapons(ped, cop);
+
+                    peds.Add(ped);
+
                     Wait(10);
                 }
             }
@@ -165,9 +183,9 @@ namespace Mod
         }
         private Model RandomModel(bool cop)
         {
-            if (cop){ return CopSkins[RandomNumber(0, CopSkins.Length)];}
-            else{ return CriminalSkins[RandomNumber(0, CriminalSkins.Length)];}
+            if (cop) { return CopSkins[RandomNumber(0, CopSkins.Length)]; }
+            else { return CriminalSkins[RandomNumber(0, CriminalSkins.Length)]; }
         }
-        public void ScriptOn(){scripton = !scripton;}
+        public void ScriptOn() { scripton = !scripton; }
     }
 }
