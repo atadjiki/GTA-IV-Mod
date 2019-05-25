@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="C:\Program Files %28x86%29\Steam\steamapps\common\Grand Theft Auto IV\GTAIV\scripts\Streetwar.cs" Link="Streetwar.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="ScriptHookDotNet">
       <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto IV\GTAIV\scripts\for Developers\bin\ScriptHookDotNet.dll</HintPath>
     </Reference>
