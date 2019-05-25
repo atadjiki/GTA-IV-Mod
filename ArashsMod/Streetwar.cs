@@ -8,7 +8,7 @@ namespace Mod
 {
     public class Streetwar : Script
     {
-        private bool debug = true;
+        private bool debug = false;
         private int debugTime = 4000;
         private bool scripton = false;
         private bool revent = false;
@@ -35,6 +35,7 @@ namespace Mod
         private int totalSpawned = 0;
 
         PedCollection peds = new PedCollection();
+        Dictionary<Ped, Blip> blips = new Dictionary<Ped, Blip>();
 
         public enum WeaponTier { Melee, Pistols, Full };
         WeaponTier weaponTier = WeaponTier.Melee;
@@ -46,6 +47,9 @@ namespace Mod
             BindKey(Settings.GetValueKey("Toggle Script", "SETTINGS", Keys.K), new KeyPressDelegate(ScriptOn));
             BindKey(Settings.GetValueKey("Toggle Pedestrian Events", "SETTINGS", Keys.L), new KeyPressDelegate(RandomEventsPedestrians));
             BindKey(Settings.GetValueKey("Toggle Debug", "SETTINGS", Keys.End), new KeyPressDelegate(ToggleDebug));
+            BindKey(Settings.GetValueKey("Toggle Debug", "SETTINGS", Keys.F9), new KeyPressDelegate(SpawnPoliceWave));
+            BindKey(Settings.GetValueKey("Toggle Debug", "SETTINGS", Keys.F10), new KeyPressDelegate(SpawnRobberWave));
+
 
             //bind tick event
             this.Tick += new EventHandler(RandomPedEvents_Tick);
@@ -65,6 +69,11 @@ namespace Mod
         }
         private void SpawnPedestrian(bool cop)
         {
+
+            if (peds.Count >= MaxPeds)
+            {
+                return;
+            }
 
             int mod = 1;
 
@@ -103,6 +112,8 @@ namespace Mod
                     ped.Armor = 0;
                     ped.WantedByPolice = true;
                     ped.StartKillingSpree(true);
+                    Blip blip = ped.AttachBlip();
+                    blips.Add(ped, blip);
                 }
 
                 ped.Task.FightAgainstHatedTargets(fightRadius);
@@ -126,41 +137,84 @@ namespace Mod
                 revent = !revent;
                 if (revent)
                 {
-                    if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Streetwar Starting...", debugTime, 1);
+                    Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Streetwar Starting...", debugTime, 1);
                 }
                 else
                 {
-                    if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Streetwar Over. Total spawned: " + totalSpawned, debugTime, 1);
-                    Wait(1000);
-                    if (Player.CanControlCharacter == false)
-                    {
-                        int pedsKilled = 0;
-                        foreach (Ped ped in peds)
-                        {
-                            if (ped.Exists())
-                            {
-                                ped.Die();
-                                pedsKilled++;
+                    Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Streetwar Over. Total spawned: " + totalSpawned, debugTime, 1);
+                    if (debug) Wait(debugTime);
 
+                    int pedsKilled = 0;
+
+
+                    
+                    foreach (Ped ped in peds)
+                    {
+                        if (ped.Exists())
+                        {
+                            ped.Health = 0;
+                            ped.AlwaysDiesOnLowHealth = true;
+                            ped.Die();
+                            pedsKilled++;
+
+                        }
+
+                        if (blips.ContainsKey(ped))
+                        {
+                            if (blips[ped].Exists())
+                            {
+                                blips[ped].Delete();
+                                blips.Remove(ped);
                             }
                         }
-                        if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Killed off " + pedsKilled + " peds", debugTime, 1);
-                        peds.Clear();
                     }
+
+                    foreach(Blip blip in blips.Values)
+                    {
+                        if (blip.Exists())
+                        {
+                            blip.Delete();
+                        }
+                        
+                    }
+
+                    if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Killed off " + pedsKilled + " peds", debugTime, 1);
+                    peds = new PedCollection();
+                    blips = new Dictionary<Ped, Blip>();
                     currentWave = 0;
                 }
             }
         }
 
+        public void SpawnPoliceWave()
+        {
+            for (int i = 0; i < cops; i++)
+            {
+                SpawnPedestrian(true);
+            }
+            if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Spawned " + cops + " police. Total: " + peds.Count, debugTime, 1);
+        }
+
+        public void SpawnRobberWave()
+        {
+
+            int amountOfRobbers = RandomNumber(robbers / 2, robbers);
+            int currentSize = peds.Count;
+
+            for (int i = 0; i < RandomNumber(cops, robbers); i++)
+            {
+                SpawnPedestrian(false);
+            }
+            RandomWeaponTier();
+
+            if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Spawned " + (peds.Count - currentSize) + " " + weaponTier.ToString() + " Total: " + peds.Count, debugTime, 1);
+
+        }
+
         public void RandomPedEvents_Tick(object sender, EventArgs e)
         {
-            if (Player.CanControlCharacter == false)
+            if (Player.Character.isAlive == false)
             {
-                if (peds.Count > 0)
-                {
-                    peds.Clear();
-                }
-
                 RandomEventsPedestrians();
 
                 return;
@@ -169,64 +223,80 @@ namespace Mod
             {
                 if (revent)
                 {
-
+                    //cull dead pedestrians
                     if (peds.Count >= MaxPeds)
                     {
-                        int currentSize = peds.Count;
-                        List<Ped> toRemove = new List<Ped>();
-
-                        foreach (Ped ped in peds)
-                        {
-                            if (ped.Exists() == false)
-                            {
-                                toRemove.Add(ped);
-                            }
-                            else if (ped.isDead)
-                            {
-                                toRemove.Add(ped);
-                            }
-
-                        }
-
-                        foreach (Ped ped in toRemove)
-                        {
-                            peds.Remove(ped);
-                        }
-
-                        if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Hit max amount of peds, removed " + (currentSize - peds.Count) + " peds - Total: " + peds.Count, debugTime, 1);
+                        if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Hit max peds " + peds.Count, debugTime, 1);
                         return;
                     }
 
-                    if (Player.Character.isInVehicle() == false)
+                    else if (Player.Character.isInVehicle() == false)
                     {
+                        //spawn wave of police
                         if (currentWave >= wavesUntilCops)
                         {
                             currentWave = 0;
 
-                            for (int i = 0; i < cops; i++)
-                            {
-                                SpawnPedestrian(true);
-                            }
-                            if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Spawned " + cops + " police. Total: " + peds.Count, debugTime, 1);
+                            SpawnPoliceWave();
                         }
                         else
                         {
-                            int amountOfRobbers = RandomNumber(robbers / 2, robbers);
-                            int currentSize = peds.Count;
-
-                            for (int i = 0; i < RandomNumber(cops, robbers); i++)
-                            {
-                                SpawnPedestrian(false);
-                            }
-                            RandomWeaponTier();
-
-                            if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Spawned " + (peds.Count - currentSize) + " " + weaponTier.ToString() + " criminals. Wave " + (currentWave + 1) + " Total: " + peds.Count, debugTime, 1);
+                            SpawnRobberWave();
                             currentWave++;
                         }
+
+                        Cull();
                     }
                 }
             }
 
+        }
+
+        public void Cull()
+        {
+            int currentSize = peds.Count;
+            List<Ped> toRemove = new List<Ped>();
+
+            foreach (Ped ped in peds)
+            {
+                if (ped.Exists() == false)
+                {
+                    toRemove.Add(ped);
+                }
+                else if (ped.isDead)
+                {
+                    toRemove.Add(ped);
+                }
+
+            }
+
+            foreach (Ped ped in toRemove)
+            {
+                peds.Remove(ped);
+
+                if (blips.ContainsKey(ped))
+                {
+                    if (blips[ped].Exists())
+                    {
+                        blips[ped].Delete();
+                        blips.Remove(ped);
+                    }
+                }
+            }
+
+            foreach(Ped ped in peds)
+            {
+                if(ped.Exists() == false)
+                {
+                    blips[ped].Delete();
+                }
+            }
+
+            if((currentSize - peds.Count) > 0)
+            {
+                if (debug) Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", "Removed " + (currentSize - peds.Count) + " dead peds - Total: " + peds.Count, debugTime, 1);
+            }
+            
         }
 
         public void RandomWeaponTier()
