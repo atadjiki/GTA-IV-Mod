@@ -6,10 +6,10 @@ using GTA.Native;
 
 namespace Mod
 {
-    public class Streetwar : Script
+    public class Streetwar : Script //make sure to extend GTA.Script
     {
         private bool debug = false;
-        private int debugTime = 4000;
+        private int debugTime = 4000; //how long the debug messages appear on screen
         private bool scripton = false;
         private bool revent = false;
 
@@ -18,9 +18,9 @@ namespace Mod
                                            "M_Y_GRUS_HI_02", "M_Y_GRUS_LO_02", "M_Y_GRUS_LO_01", "M_O_GRUS_HI_01", "M_Y_GALB_LO_01", "M_Y_GALB_LO_02",
                                            "M_Y_GALB_LO_03", "M_Y_GALB_LO_04" };
 
-        private const int interval = 10000;
-        private const int spawnRadius = 25;
-        private const int fightRadius = 200;
+        private const int interval = 10000; //script fires every 10 seconds
+        private const int spawnRadius = 25; //NPC's spawn 25 units around player
+        private const int fightRadius = 200; //NPC's will fight hated Pedestrians in a 200 unit radius
 
         private const int cops = 8;
         private const int robbers = 16;
@@ -34,15 +34,15 @@ namespace Mod
         private const int MaxPeds = 64;
         private int totalSpawned = 0;
 
-        PedCollection peds = new PedCollection();
-        Dictionary<Ped, Blip> blips = new Dictionary<Ped, Blip>();
+        PedCollection peds = new PedCollection(); //for holding pedestrians
+        Dictionary<Ped, Blip> blips = new Dictionary<Ped, Blip>(); //for matching pedestrians to blips
 
-        public enum WeaponTier { Melee, Pistols, Full };
+        public enum WeaponTier { Melee, Pistols, Full }; //specifies what type of weapons we give the criminals
         WeaponTier weaponTier = WeaponTier.Melee;
 
         public Streetwar()
         {
-            //set interval
+            //set interval and key binds
             Interval = Settings.GetValueInteger("INTERVAL", "SETTINGS", interval);
             BindKey(Settings.GetValueKey("Toggle Script", "SETTINGS", Keys.K), new KeyPressDelegate(ScriptOn));
             BindKey(Settings.GetValueKey("Toggle Pedestrian Events", "SETTINGS", Keys.L), new KeyPressDelegate(RandomEventsPedestrians));
@@ -67,6 +67,8 @@ namespace Mod
                 debug = true;
             }
         }
+
+        //Creates a pedestrian, assigns behavior and adds a blip if necessary. Creates a cop if cop=true, criminal if false
         private void SpawnPedestrian(bool cop)
         {
 
@@ -82,7 +84,7 @@ namespace Mod
             Ped ped = World.CreatePed(RandomModel(cop), Player.Character.GetOffsetPosition(new Vector3(mod * RandomNumber(spawnRadius / 2, spawnRadius), mod * RandomNumber(spawnRadius / 2, spawnRadius), 0.0f)).ToGround());
             if (Exists(ped) && ped != null)
             {
-                ped.BecomeMissionCharacter();
+                ped.BecomeMissionCharacter(); //makes sure the pedestrian persists while player alive
 
                 if (cop)
                 {
@@ -116,7 +118,7 @@ namespace Mod
                     blips.Add(ped, blip);
                 }
 
-                ped.Task.FightAgainstHatedTargets(fightRadius);
+                ped.Task.FightAgainstHatedTargets(fightRadius); //give the pedestrian their task, will repeat
 
                 RandomWeapons(ped, cop);
                 peds.Add(ped);
@@ -146,8 +148,9 @@ namespace Mod
 
                     int pedsKilled = 0;
 
+                    //Do some clean up
 
-                    
+                    //kill all pedestrians 
                     foreach (Ped ped in peds)
                     {
                         if (ped.Exists())
@@ -159,6 +162,7 @@ namespace Mod
 
                         }
 
+                        //remove all blips on living pedestrians
                         if (blips.ContainsKey(ped))
                         {
                             if (blips[ped].Exists())
@@ -169,6 +173,7 @@ namespace Mod
                         }
                     }
 
+                    //remove any dead blips if there are any
                     foreach(Blip blip in blips.Values)
                     {
                         if (blip.Exists())
@@ -182,12 +187,13 @@ namespace Mod
                     peds = new PedCollection();
                     blips = new Dictionary<Ped, Blip>();
                     currentWave = 0;
+                    //reinit lists and reset counters
                 }
             }
         }
 
         public void SpawnPoliceWave()
-        {
+        { 
             for (int i = 0; i < cops; i++)
             {
                 SpawnPedestrian(true);
